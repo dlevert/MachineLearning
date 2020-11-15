@@ -69,3 +69,8 @@ print(paste("Linear Discriminant Accuracy",
 par(mfcol = c(1,1))
 plot(modFit1$finalModel)
 print(modFit1$finalModel$confusion)
+
+# CONCLUSION ===============================
+u <- t(data.frame(t[1,]))
+rownames(u) <- "Random Forest"
+u %>% kbl() %>% kable_classic_2(full_width = T)

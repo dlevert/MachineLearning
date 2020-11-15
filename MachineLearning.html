@@ -1321,6 +1321,79 @@ B
 <h2>Conclusion</h2>
 <p>The model appears to be able to predict the outcomes of the test dataset at an accuracy of 99.3%. I believe this can accurately predict the classe variable in future datasets.</p>
 </div>
+<div id="appendix" class="section level2">
+<h2>Appendix</h2>
+<p>Code used in analysis:</p>
+<pre class="r"><code>     knitr::opts_chunk$set(echo = TRUE)
+     require(knitr)
+     require(caret)
+     require(ggplot2)
+     training &lt;- read.csv(
+          &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;)
+     testing &lt;- read.csv(
+          &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;)
+     trainSub &lt;- training
+     trainSub &lt;- trainSub[,-1]
+     trainSub &lt;- trainSub[,-2:-6]
+     trainSub[trainSub == &quot;&quot;] &lt;- NA
+     trainSub &lt;- trainSub[, colSums(is.na(trainSub))==0]
+     trainSub[, 2:53] &lt;- apply(trainSub[,2:53], 2, as.numeric)
+     trainSub$user_name &lt;- as.factor(trainSub$user_name)
+     trainSub$classe &lt;- as.factor(trainSub$classe)
+     testSub &lt;- testing
+     testSub &lt;- testSub[,-1]
+     testSub &lt;- testSub[,-2:-6]
+     testSub[testSub == &quot;&quot;] &lt;- NA
+     testSub &lt;- testSub[, colSums(is.na(testSub))==0]
+     testSub[, 2:53] &lt;- apply(testSub[,2:53], 2, as.numeric)
+     testSub &lt;- testSub[,-54]
+     testSub$user_name &lt;- as.factor(testSub$user_name)
+     rm(training); rm(testing)
+     set.seed(333)
+     modFit1 &lt;- train(classe ~ ., data = trainSub, method=&quot;rf&quot;,
+                      ntree=100)
+     modFit2 &lt;- train(classe ~ ., data = trainSub, method = &quot;gbm&quot;,
+                      verbose = FALSE)
+     modFit3 &lt;- train(classe ~ ., data = trainSub, method = &quot;lda&quot;)
+     pdRF &lt;- predict(modFit1, newdata = testSub)
+     pdGBM &lt;- predict(modFit1, newdata = testSub)
+     pdLDA &lt;- predict(modFit1, newdata = testSub)
+     require(kableExtra)
+     modComp &lt;- data.frame(pdRF, pdGBM, pdLDA)
+     impRF &lt;- varImp(modFit1)
+     impRF &lt;- data.frame(impRF$importance)
+     impRF$Variable &lt;- rownames(impRF)
+     impRF &lt;- impRF[order(impRF$Overall, decreasing = TRUE),]
+     impRF$Overall &lt;- round(impRF$Overall,1)
+     impRF$Importance &lt;- 1:dim(impRF)[1]
+     impRF[1:10,c(3,2,1)] %&gt;% kbl(row.names = FALSE, 
+                                  align = c(&quot;c&quot;,&quot;l&quot;, &quot;c&quot;)) %&gt;%
+     kable_classic_2(full_width = T)
+
+     par(mfcol = c(1,3))
+     plot(modComp$pdRF, main = &quot;Random Forest Prediction&quot;, col = &quot;blue&quot;)
+     plot(modComp$pdGBM, main = &quot;Boosted Regression Prediction&quot;, 
+          col = &quot;green&quot;)
+     plot(modComp$pdLDA, main = &quot;Linear Discriminant Predistion&quot;, 
+          col = &quot;brown&quot;)
+     rownames(modComp) &lt;- 1:20
+     t &lt;- t(modComp)
+     t %&gt;% kbl() %&gt;% kable_classic_2(full_width = T)
+     print(paste(&quot;Random Forest Accuracy&quot;, 
+                 round(modFit1$results[2,2]*100,2), &quot;%&quot;))
+     print(paste(&quot;Boosted Regression Accuracy&quot;, 
+                 round(modFit2$results[9,5]*100,2), &quot;%&quot;))
+     print(paste(&quot;Linear Discriminant Accuracy&quot;, 
+                 round(modFit3$results[1,2]*100,2), &quot;%&quot;))
+     require(kableExtra)
+     modFit1$finalModel$confusion %&gt;% kbl() %&gt;% 
+          kable_classic_2(full_width = T)
+     u &lt;- t(data.frame(t[1,]))
+     rownames(u) &lt;- &quot;Random Forest&quot;
+     u %&gt;% kbl() %&gt;% kable_classic_2(full_width = T)
+# APPENDIX CODE=================
+     labs = knitr::all_labels()</code></pre>
+</div>
 
 
 
